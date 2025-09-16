@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Cover Page Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-top: 0.25rem;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        #generateBtn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        #generateBtn:hover {
+            background-color: #2563eb;
+        }
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f9fafb;
+        }
+        .logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="container flex flex-col items-center">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Assignment Cover Page Generator</h1>
+
+    <div class="logo-container">
+        <img id="logo" src="https://raw.githubusercontent.com/farhanmonsurfahim/assignment/main/nub.jpeg" alt="University Logo">
+    </div>
+
+    <form id="coverPageForm" class="w-full space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+                <label for="universityName" class="block text-sm">University Name</label>
+                <input type="text" id="universityName" value="Northern University Bangladesh" readonly>
+            </div>
+            <div class="form-group">
+                <label for="name" class="block text-sm">Student Name</label>
+                <input type="text" id="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="studentId" class="block text-sm">Student ID</label>
+                <input type="text" id="studentId" placeholder="e.g., 123456789" required>
+            </div>
+            <div class="form-group">
+                <label for="department" class="block text-sm">Department</label>
+                <input type="text" id="department" placeholder="e.g., Computer Science and Engineering" required>
+            </div>
+            <div class="form-group">
+                <label for="semester" class="block text-sm">Semester</label>
+                <input type="text" id="semester" placeholder="e.g., 5th" required>
+            </div>
+            <div class="form-group">
+                <label for="section" class="block text-sm">Section</label>
+                <input type="text" id="section" placeholder="e.g., A" required>
+            </div>
+            <div class="form-group md:col-span-2">
+                <label for="assignmentTopic" class="block text-sm">Assignment Topic</label>
+                <input type="text" id="assignmentTopic" placeholder="e.g., Data Structures and Algorithms" required>
+            </div>
+            <div class="form-group md:col-span-2">
+                <label for="subject" class="block text-sm">Subject</label>
+                <input type="text" id="subject" placeholder="e.g., CSC 201: Data Structures" required>
+            </div>
+            <div class="form-group">
+                <label for="courseTeacher" class="block text-sm">Course Teacher Name</label>
+                <input type="text" id="courseTeacher" placeholder="e.g., Dr. Jane Doe" required>
+            </div>
+            <div class="form-group">
+                <label for="teacherDesignation" class="block text-sm">Teacher Designation</label>
+                <input type="text" id="teacherDesignation" placeholder="e.g., Assistant Professor" required>
+            </div>
+        </div>
+
+        <div class="flex justify-center mt-6">
+            <button type="submit" id="generateBtn" class="w-full md:w-auto">Generate PDF</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById('coverPageForm');
+    let logoData = null;
+
+    // Load the default logo and convert it to a data URL for jspdf
+    const defaultLogoURL = "https://raw.githubusercontent.com/farhanmonsurfahim/assignment/main/nub.jpeg";
+    const defaultLogoImage = new Image();
+    defaultLogoImage.crossOrigin = "anonymous";
+    defaultLogoImage.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = defaultLogoImage.width;
+        canvas.height = defaultLogoImage.height;
+        ctx.drawImage(defaultLogoImage, 0, 0);
+        logoData = canvas.toDataURL('image/jpeg');
+    };
+    defaultLogoImage.src = defaultLogoURL;
+
+    const getFormData = () => {
+        return {
+            universityName: document.getElementById('universityName').value,
+            name: document.getElementById('name').value,
+            studentId: document.getElementById('studentId').value,
+            department: document.getElementById('department').value,
+            semester: document.getElementById('semester').value,
+            section: document.getElementById('section').value,
+            assignmentTopic: document.getElementById('assignmentTopic').value,
+            subject: document.getElementById('subject').value,
+            courseTeacher: document.getElementById('courseTeacher').value,
+            teacherDesignation: document.getElementById('teacherDesignation').value,
+            submissionDate: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        };
+    };
+
+    const generatePDF = () => {
+        const formData = getFormData();
+        
+        // This check is the most important to ensure the required data is present.
+        if (!logoData || !formData.name || !formData.studentId || !formData.department || !formData.semester || !formData.section || !formData.assignmentTopic || !formData.subject) {
+            return;
+        }
+
+        if (typeof window.jspdf === 'undefined') {
+            console.error('jsPDF library not loaded.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add a border to the page
+        doc.setDrawColor(0);
+        doc.setLineWidth(1);
+        doc.rect(10, 10, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 20);
+
+        // Add University Name and Logo
+        const universityText = formData.universityName;
+        
+        const logoSize = 60;
+        const logoX = (doc.internal.pageSize.getWidth() - logoSize) / 2;
+        doc.addImage(logoData, 'JPEG', logoX, 40, logoSize, logoSize);
+
+        doc.setFontSize(22);
+        doc.text(universityText, doc.internal.pageSize.getWidth() / 2, 120, { align: 'center' });
+
+        // Add a separator line
+        doc.setLineWidth(0.5);
+        doc.line(30, 135, doc.internal.pageSize.getWidth() - 30, 135);
+
+        // Add Assignment Title
+        doc.setFontSize(26);
+        doc.setFont('Helvetica', 'bold');
+        doc.text('ASSIGNMENT SUBMISSION', doc.internal.pageSize.getWidth() / 2, 150, { align: 'center' });
+        doc.setFontSize(18);
+        doc.setFont('Helvetica', 'normal');
+        doc.text('Subject: ' + formData.subject, doc.internal.pageSize.getWidth() / 2, 160, { align: 'center' });
+
+        // Create the box for assignment topic
+        const boxWidth = 150;
+        const boxHeight = 15;
+        const boxX = (doc.internal.pageSize.getWidth() - boxWidth) / 2;
+        doc.setDrawColor(0);
+        doc.setFillColor(255, 255, 255);
+        doc.rect(boxX, 170, boxWidth, boxHeight, 'FD');
+        doc.setFontSize(14);
+        doc.text(formData.assignmentTopic, doc.internal.pageSize.getWidth() / 2, 179, { align: 'center' });
+        
+        // Add another separator line
+        doc.setLineWidth(0.5);
+        doc.line(30, 190, doc.internal.pageSize.getWidth() - 30, 190);
+
+        // Add submitted by and submitted to details in a two-column layout
+        doc.setFontSize(14);
+        const leftX = 30;
+        const rightX = doc.internal.pageSize.getWidth() / 2 + 10;
+        const spacing = 8;
+        let currentY = 210;
+
+        // Submitted By section (Left Column)
+        doc.setFont('Helvetica', 'bold');
+        doc.text('Submitted by:', leftX, currentY);
+        doc.line(leftX, currentY + 1, leftX + 25, currentY + 1); // Underline
+        doc.setFont('Helvetica', 'normal');
+        currentY += spacing + 5;
+        doc.text('Name: ' + formData.name, leftX, currentY);
+        doc.text('ID: ' + formData.studentId, leftX, currentY + spacing);
+        doc.text('Semester/Section: ' + formData.semester + '-' + formData.section, leftX, currentY + 2 * spacing);
+        doc.text('Dept. of ' + formData.department, leftX, currentY + 3 * spacing);
+        let finalY = currentY + 4 * spacing;
+        
+        // Submitted To section (Right Column)
+        if (formData.courseTeacher) {
+            currentY = 210; // Reset Y for the right column
+            doc.setFont('Helvetica', 'bold');
+            doc.text('Submitted to:', rightX, currentY);
+            doc.line(rightX, currentY + 1, rightX + 25, currentY + 1); // Underline
+            doc.setFont('Helvetica', 'normal');
+            currentY += spacing + 5;
+            doc.text('Teacher Name: ' + formData.courseTeacher, rightX, currentY);
+            if (formData.teacherDesignation) {
+                doc.text('Designation: ' + formData.teacherDesignation, rightX, currentY + spacing);
+                currentY += spacing;
+            }
+        }
+
+        // Add submission date at the bottom, adjusted for the new layout
+        const finalYPos = Math.max(finalY, currentY) + 20; // Take the lower Y position of the two columns
+        doc.text('Date: ' + formData.submissionDate, doc.internal.pageSize.getWidth() / 2, finalYPos, { align: 'center' });
+
+        // Save the PDF
+        doc.save(formData.assignmentTopic.replace(/ /g, '_') + '_Cover_Page.pdf');
+    };
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        generatePDF();
+    });
+</script>
+
+</body>
+</html>
